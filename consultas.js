@@ -1,7 +1,7 @@
 const format = require('pg-format');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const pool = require('./src/controler.js')
+const pool = require('./src/controler/controler.js')
 
 const agregarUsuario = async ({ email, password, rol, lenguage }) => {
     const passwordHash = await bcrypt.hash(password, 10);
@@ -12,9 +12,16 @@ const agregarUsuario = async ({ email, password, rol, lenguage }) => {
     await pool.query(formattedQuery);
 };
 
-const autenticacion = async ({ email, password }) => {
-    const token = jwt.sign({email: email}, "secreto", {expiresIn: "2h"});
-    return {email, token};
+const autenticacion = async ({email}) => {
+    const token = jwt.sign({email}, "az_AZ", {expiresIn: "2h"});
+    return token;
+}
+
+const getUsuario = async (token) => {
+    const {email} = jwt.decode(token);
+    const formattedQuery = format("SELECT * FROM usuarios WHERE email = %L", email);
+    const {rows} = await pool.query(formattedQuery);
+    return rows;
 }
 
 /* funcion que al momento de registrar un usuario revisa la base de datos para verificar que el correo no se encuentre en uso */
@@ -36,4 +43,4 @@ const verificarSiUsuarioExiste = async (reqBody) => {
 
 
 
-module.exports = { agregarUsuario, pool, autenticacion, verificarSiUsuarioExiste };
+module.exports = { agregarUsuario, pool, autenticacion, verificarSiUsuarioExiste, getUsuario };

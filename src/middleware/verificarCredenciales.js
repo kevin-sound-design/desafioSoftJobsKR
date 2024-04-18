@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const pool = require('../src/controler.js');
+const pool = require('../controler/controler.js');
 const format = require('pg-format');
 
 const verificarCredenciales = async (req, res, next) => {
@@ -8,11 +8,11 @@ const verificarCredenciales = async (req, res, next) => {
         const formattedQuery = format("SELECT * FROM usuarios WHERE email = %L", email);
         const { rows, rowCount } = await pool.query(formattedQuery);
         if(!rowCount){
-            throw {error: "El correo que intentas utilizar no esta registrado"}
+            throw {message: "El correo que intentas utilizar no esta registrado"}
         }
         const comparacionPassword = await bcrypt.compare(password, rows[0].password);
         if(!comparacionPassword){
-            throw {error: "Contraseña incorrecta"}
+            throw {message: "Contraseña incorrecta"}
         }
         next();
     }catch(error){

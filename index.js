@@ -1,9 +1,10 @@
 const express = require('express');
-const { reportarConsultas } = require('./middleware/reportarConsultas')
-const verificarCredenciales = require('./middleware/verificarCredenciales.js')
-const { agregarUsuario, autenticacion, verificarSiUsuarioExiste } = require('./consultas');
+const { reportarConsultas } = require('./src/middleware/reportarConsultas.js');
+const verificarCredenciales = require('./src/middleware/verificarCredenciales.js');
+const verifyToken = require('./src/middleware/verifyToken.js');
+const { agregarUsuario, autenticacion, verificarSiUsuarioExiste, getUsuario } = require('./consultas');
 const cors = require('cors');
-const verifyToken = require('./middleware/verifyToken.js');
+
 
 
 const app = express();
@@ -32,21 +33,22 @@ app.post('/usuarios', async (req, res) => {
 /* ruta para iniciar sesion, utiliza middleware para verificar las credenciales antes de proveer de un token */
 app.post('/login', verificarCredenciales, async (req, res) => {
     try {
-        res.send("se inicio sesion")
-
+        const token = await autenticacion(req.body);
+        res.send({token: token});
     } catch (error) {
-        console.log(error);
         res.send(error)
     }
 });
 
 app.get('/usuarios', verifyToken, async (req, res) => {
     try {
-        console.log(req);
-        res.send("h")
+        const authorization = req.headers.authorization;
+        const token = authorization.split(" ")[1];
+        const usuario = await getUsuario(token);
+        res.json(usuario);
 
     } catch (error) {
         console.log(error);
-        res.send("ss")
+        res.status(500).send(error);
     }
 })
